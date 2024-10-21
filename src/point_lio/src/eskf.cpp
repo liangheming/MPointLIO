@@ -68,6 +68,8 @@ void ESKF::predict(double dt)
 bool ESKF::updateByIMU()
 {
     ObservationState obs;
+    obs.H.setZero();
+    obs.z.setZero();
     imu_measure_func(x, obs);
     if (!obs.valid)
         return false;
@@ -86,6 +88,8 @@ bool ESKF::updateByIMU()
 bool ESKF::updateByLidar()
 {
     ObservationState obs;
+    obs.H.setZero();
+    obs.z.setZero();
     lidar_measure_func(x, obs);
     if (!obs.valid)
         return false;

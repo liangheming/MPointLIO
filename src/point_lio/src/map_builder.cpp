@@ -61,7 +61,7 @@ bool MapBuilder::initIMU()
     eskf.x.g = Vec3d(0, 0, -GRAVITY);
     eskf.x.acc = init_q.inverse() * eskf.x.g * (-1.0);
 
-    eskf.P = Mat30d::Identity() * 0.0001;
+    eskf.P = Mat30d::Identity() * 0.1;
     eskf.P.block<3, 3>(State::V_ID, State::V_ID) = Mat3d::Identity() * m_config.vel_cov;
     eskf.P.block<3, 3>(State::ACC_ID, State::ACC_ID) = Mat3d::Identity() * m_config.acc_cov;
     eskf.P.block<3, 3>(State::OMEGA_ID, State::OMEGA_ID) = Mat3d::Identity() * m_config.gyro_cov;

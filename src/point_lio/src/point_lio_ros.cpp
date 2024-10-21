@@ -41,6 +41,9 @@ void PointLIOROS::loadParameters()
     m_nh.param<double>("cube_len", m_map_builder_config.cube_len, 300.0);
     m_nh.param<double>("move_thresh", m_map_builder_config.move_thresh, 1.5);
     m_nh.param<double>("det_range", m_map_builder_config.det_range, 60.0);
+
+    ROS_DEBUG_NAMED("PointLIOROS", "lidar_meas_cov_inv %f", m_map_builder_config.lidar_meas_cov_inv);
+
 }
 
 void PointLIOROS::initSubscribers()
@@ -126,7 +129,7 @@ void PointLIOROS::threadCallBack()
             sensor_msgs::PointCloud2 msg;
             pcl::toROSMsg(*cloud, msg);
             msg.header.frame_id = m_config.body_frame;
-            msg.header.stamp = ros::Time(m_map_builder->lastMapUpdateTime());
+            msg.header.stamp = ros::Time(m_package.lidar_end_time);
             m_point_pub.publish(msg);
             m_map_builder->increMap();
         }
@@ -174,7 +177,7 @@ bool PointLIOROS::syncPackage()
     }
     if (m_package.imu_data_in.empty())
         return false;
-    ROS_DEBUG("imu size: %lu, cloud_size: %lu", m_package.imu_data_in.size(), m_package.cloud_in->points.size());
+    // ROS_DEBUG("imu size: %lu, cloud_size: %lu", m_package.imu_data_in.size(), m_package.cloud_in->points.size());
 
     return true;
 }
