@@ -1,0 +1,7 @@
+<launch>
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find point_lio)/config/rosconsole.conf" />
+    <node pkg="point_lio" type="point_lio_node" name="point_lio" output="screen">
+
+    </node>
+    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find point_lio)/rviz/default.rviz" />
+</launch>
