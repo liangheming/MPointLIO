@@ -25,6 +25,8 @@ struct MapBuilderConfig
     double cube_len = 300.0;
     double move_thresh = 1.5;
     double det_range = 60.0;
+    Quatd q_il;
+    Vec3d t_il;
 };
 
 struct LocalMap

@@ -51,10 +51,10 @@ void ESKF::predict(double dt)
     x += delta;
     Mat30d Fx = Mat30d::Identity();
     Mat30x12d Fg = Mat30x12d::Zero();
-    Fx.block<3, 3>(State::Q_ID, State::Q_ID) = Sophus::SO3d::exp(-x.omega * dt).matrix();
+    Fx.block<3, 3>(State::Q_ID, State::Q_ID) = Exp(-x.omega * dt);
     Fx.block<3, 3>(State::Q_ID, State::OMEGA_ID) = Mat3d::Identity() * dt;
     Fx.block<3, 3>(State::P_ID, State::V_ID) = Mat3d::Identity() * dt;
-    Fx.block<3, 3>(State::V_ID, State::Q_ID) = -x.q.matrix() * Sophus::SO3d::hat(x.acc) * dt;
+    Fx.block<3, 3>(State::V_ID, State::Q_ID) = -x.q.matrix() * skew(x.acc) * dt;
     Fx.block<3, 3>(State::V_ID, State::G_ID) = Mat3d::Identity() * dt;
     Fx.block<3, 3>(State::V_ID, State::ACC_ID) = x.q.matrix() * dt;
 
@@ -79,8 +79,8 @@ bool ESKF::updateByIMU()
     Vec30d delta = -H_inv * obs.z;
     x += delta;
     Mat30d K = Mat30d::Identity();
-    K.block<3, 3>(State::Q_ID, State::Q_ID) = Sophus::SO3d::leftJacobianInverse(delta.segment<3>(State::Q_ID)).transpose();
-    K.block<3, 3>(State::OFF_Q_ID, State::OFF_Q_ID) = Sophus::SO3d::leftJacobianInverse(delta.segment<3>(State::OFF_Q_ID)).transpose();
+    K.block<3, 3>(State::Q_ID, State::Q_ID) = leftJacobianInverse(delta.segment<3>(State::Q_ID)).transpose();
+    K.block<3, 3>(State::OFF_Q_ID, State::OFF_Q_ID) = leftJacobianInverse(delta.segment<3>(State::OFF_Q_ID)).transpose();
     P = K * H_inv * K.transpose();
     return true;
 }
@@ -99,8 +99,8 @@ bool ESKF::updateByLidar()
     Vec30d delta = -H_inv * obs.z;
     x += delta;
     Mat30d K = Mat30d::Identity();
-    K.block<3, 3>(State::Q_ID, State::Q_ID) = Sophus::SO3d::leftJacobianInverse(delta.segment<3>(State::Q_ID)).transpose();
-    K.block<3, 3>(State::OFF_Q_ID, State::OFF_Q_ID) = Sophus::SO3d::leftJacobianInverse(delta.segment<3>(State::OFF_Q_ID)).transpose();
+    K.block<3, 3>(State::Q_ID, State::Q_ID) = leftJacobianInverse(delta.segment<3>(State::Q_ID)).transpose();
+    K.block<3, 3>(State::OFF_Q_ID, State::OFF_Q_ID) = leftJacobianInverse(delta.segment<3>(State::OFF_Q_ID)).transpose();
     P = K * H_inv * K.transpose();
     return true;
 }

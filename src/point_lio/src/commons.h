@@ -4,6 +4,7 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <livox_ros_driver2/CustomMsg.h>
+#include <pcl/filters/voxel_grid.h>
 
 using PointType = pcl::PointXYZINormal;
 using CloudType = pcl::PointCloud<PointType>;
@@ -44,6 +45,13 @@ struct Package
     Package() : cloud_in(new CloudType), cloud_body(new CloudType), cloud_world(new CloudType) {}
 };
 
-CloudType::Ptr livox2PCL(const livox_ros_driver2::CustomMsg::ConstPtr &msg, int filter_num, double min_range, double max_range, double time_thresh = 0.0);
+CloudType::Ptr livox2PCL(const livox_ros_driver2::CustomMsg::ConstPtr &msg, int filter_num, double min_range, double max_range, double time_thresh = 0.0,double downsample=0.0);
 
 bool esti_plane(PointVec &points, const double &thresh, Vec4d &out);
+
+Mat3d skew(const Vec3d &x);
+
+Mat3d leftJacobianInverse(const Vec3d &x);
+
+Mat3d Exp(const Vec3d &x);
+

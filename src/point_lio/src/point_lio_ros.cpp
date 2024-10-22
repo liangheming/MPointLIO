@@ -42,8 +42,46 @@ void PointLIOROS::loadParameters()
     m_nh.param<double>("move_thresh", m_map_builder_config.move_thresh, 1.5);
     m_nh.param<double>("det_range", m_map_builder_config.det_range, 60.0);
 
-    ROS_DEBUG_NAMED("PointLIOROS", "lidar_meas_cov_inv %f", m_map_builder_config.lidar_meas_cov_inv);
+    std::vector<double> pose_imu_lidar;
+    m_nh.param<std::vector<double>>("pose_imu_lidar", pose_imu_lidar, {1, 0, 0, 0, 0, 0, 0});
+    assert(pose_imu_lidar.size() == 7);
+    m_map_builder_config.q_il.w() = pose_imu_lidar[0];
+    m_map_builder_config.q_il.x() = pose_imu_lidar[1];
+    m_map_builder_config.q_il.y() = pose_imu_lidar[2];
+    m_map_builder_config.q_il.z() = pose_imu_lidar[3];
+    m_map_builder_config.t_il.x() = pose_imu_lidar[4];
+    m_map_builder_config.t_il.y() = pose_imu_lidar[5];
+    m_map_builder_config.t_il.z() = pose_imu_lidar[6];
 
+    ROS_DEBUG_NAMED("PointLIOROS", "imu_topic %s", m_config.imu_topic.c_str());
+    ROS_DEBUG_NAMED("PointLIOROS", "lidar_topic %s", m_config.lidar_topic.c_str());
+    ROS_DEBUG_NAMED("PointLIOROS", "map_frame %s", m_config.map_frame.c_str());
+    ROS_DEBUG_NAMED("PointLIOROS", "body_frame %s", m_config.body_frame.c_str());
+
+    ROS_DEBUG_NAMED("PointLIOROS", "filter_num %d", m_config.filter_num);
+    ROS_DEBUG_NAMED("PointLIOROS", "imu_acc_multi %f", m_config.imu_acc_multi);
+    ROS_DEBUG_NAMED("PointLIOROS", "imu_gyro_multi %f", m_config.imu_gyro_multi);
+    ROS_DEBUG_NAMED("PointLIOROS", "lidar_scan_min_range %f", m_config.lidar_scan_min_range);
+    ROS_DEBUG_NAMED("PointLIOROS", "lidar_scan_max_range %f", m_config.lidar_scan_max_range);
+    ROS_DEBUG_NAMED("PointLIOROS", "imu_init_num %d", m_map_builder_config.imu_init_num);
+    ROS_DEBUG_NAMED("PointLIOROS", "vel_cov %f", m_map_builder_config.vel_cov);
+    ROS_DEBUG_NAMED("PointLIOROS", "acc_cov %f", m_map_builder_config.acc_cov);
+    ROS_DEBUG_NAMED("PointLIOROS", "gyro_cov %f", m_map_builder_config.gyro_cov);
+    ROS_DEBUG_NAMED("PointLIOROS", "b_acc_cov %f", m_map_builder_config.b_acc_cov);
+    ROS_DEBUG_NAMED("PointLIOROS", "b_gyro_cov %f", m_map_builder_config.b_gyro_cov);
+
+    ROS_DEBUG_NAMED("PointLIOROS", "lidar_meas_cov_inv %f", m_map_builder_config.lidar_meas_cov_inv);
+    ROS_DEBUG_NAMED("PointLIOROS", "imu_meas_acc_cov_inv %f", m_map_builder_config.imu_meas_acc_cov_inv);
+    ROS_DEBUG_NAMED("PointLIOROS", "imu_meas_gyro_cov_inv %f", m_map_builder_config.imu_meas_gyro_cov_inv);
+    ROS_DEBUG_NAMED("PointLIOROS", "satu_acc %f", m_map_builder_config.satu_acc);
+    ROS_DEBUG_NAMED("PointLIOROS", "satu_gyro %f", m_map_builder_config.satu_gyro);
+    ROS_DEBUG_NAMED("PointLIOROS", "scan_resolution %f", m_map_builder_config.scan_resolution);
+    ROS_DEBUG_NAMED("PointLIOROS", "map_resolution %f", m_map_builder_config.map_resolution);
+    ROS_DEBUG_NAMED("PointLIOROS", "near_search_num %f", m_map_builder_config.near_search_num);
+    ROS_DEBUG_NAMED("PointLIOROS", "cube_len %f", m_map_builder_config.cube_len);
+    ROS_DEBUG_NAMED("PointLIOROS", "move_thresh %f", m_map_builder_config.move_thresh);
+    ROS_DEBUG_NAMED("PointLIOROS", "det_range %f", m_map_builder_config.det_range);
+    ROS_DEBUG_NAMED("PointLIOROS", "pose_imu_lidar %f %f %f %f %f %f %f", m_map_builder_config.q_il.w(), m_map_builder_config.q_il.x(), m_map_builder_config.q_il.y(), m_map_builder_config.q_il.z(), m_map_builder_config.t_il.x(), m_map_builder_config.t_il.y(), m_map_builder_config.t_il.z());
 }
 
 void PointLIOROS::initSubscribers()
@@ -60,7 +98,7 @@ void PointLIOROS::initPublishers()
 
 void PointLIOROS::lidarCallback(const livox_ros_driver2::CustomMsgConstPtr &msg)
 {
-    CloudType::Ptr cloud = livox2PCL(msg, m_config.filter_num, m_config.lidar_scan_min_range, m_config.lidar_scan_max_range, m_state.last_lidar_end_time);
+    CloudType::Ptr cloud = livox2PCL(msg, m_config.filter_num, m_config.lidar_scan_min_range, m_config.lidar_scan_max_range, m_state.last_lidar_end_time, m_map_builder_config.scan_resolution);
     {
         boost::lock_guard<boost::mutex> lock(m_state.lidar_mutex);
         double timestamp = msg->header.stamp.toSec();
@@ -143,8 +181,6 @@ bool PointLIOROS::syncPackage()
     if (!m_state.lidar_pushed)
     {
         m_package.cloud_in = m_state.lidar_queue.front().second;
-        // m_voxel_filter.setInputCloud(m_package.cloud_in);
-        // m_voxel_filter.filter(*m_package.cloud_in);
         m_package.lidar_start_time = m_state.lidar_queue.front().first;
         m_package.first_point_time = m_package.lidar_start_time + m_package.cloud_in->points.front().curvature;
         m_package.lidar_end_time = m_package.lidar_start_time + m_package.cloud_in->points.back().curvature;
@@ -177,8 +213,6 @@ bool PointLIOROS::syncPackage()
     }
     if (m_package.imu_data_in.empty())
         return false;
-    // ROS_DEBUG("imu size: %lu, cloud_size: %lu", m_package.imu_data_in.size(), m_package.cloud_in->points.size());
-
     return true;
 }
 

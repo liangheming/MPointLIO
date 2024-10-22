@@ -1,6 +1,6 @@
 #include "commons.h"
 
-CloudType::Ptr livox2PCL(const livox_ros_driver2::CustomMsg::ConstPtr &msg, int filter_num, double min_range, double max_range, double time_thresh)
+CloudType::Ptr livox2PCL(const livox_ros_driver2::CustomMsg::ConstPtr &msg, int filter_num, double min_range, double max_range, double time_thresh, double downsample)
 {
     CloudType::Ptr cloud(new CloudType);
     int point_num = msg->point_num;
@@ -26,6 +26,13 @@ CloudType::Ptr livox2PCL(const livox_ros_driver2::CustomMsg::ConstPtr &msg, int 
                 continue;
             cloud->points.push_back(p);
         }
+    }
+    if (downsample > 0.0)
+    {
+        pcl::VoxelGrid<PointType> filter;
+        filter.setLeafSize(downsample, downsample, downsample);
+        filter.setInputCloud(cloud);
+        filter.filter(*cloud);
     }
 
     std::sort(cloud->points.begin(), cloud->points.end(), [](const PointType &a, const PointType &b)
@@ -58,4 +65,38 @@ bool esti_plane(PointVec &points, const double &thresh, Vec4d &out)
             return false;
     }
     return true;
+}
+Mat3d skew(const Vec3d &x)
+{
+    Mat3d res;
+    res << 0, -x(2), x(1),
+        x(2), 0, -x(0),
+        -x(1), x(0), 0;
+    return res;
+}
+Mat3d leftJacobianInverse(const Vec3d &x)
+{
+    double theta = x.norm();
+    double theta_sq = theta * theta;
+    Mat3d Omega = skew(x);
+    Mat3d V_inv;
+    if (theta < 1e-6)
+        V_inv = Mat3d::Identity() - 0.5 * Omega + (1. / 12.) * (Omega * Omega);
+    else
+        V_inv = Mat3d::Identity() - 0.5 * Omega + (1.0 - 0.5 * theta * cos(0.5 * theta) / sin(0.5 * theta)) / (theta_sq) * (Omega * Omega);
+    return V_inv;
+}
+
+Mat3d Exp(const Vec3d &x)
+{
+    double theta = x.norm();
+    if (theta < 1e-6)
+        return Mat3d::Identity();
+    else
+    {
+        Vec3d omega = x.normalized();
+        Mat3d skew_omega = skew(omega);
+        double cos_theta = cos(theta);
+        return cos_theta * Mat3d::Identity() + (1.0 - cos_theta) * omega * omega.transpose() + sin(theta) * skew_omega;
+    }
 }

@@ -60,7 +60,8 @@ bool MapBuilder::initIMU()
     eskf.x.q = init_q;
     eskf.x.g = Vec3d(0, 0, -GRAVITY);
     eskf.x.acc = init_q.inverse() * eskf.x.g * (-1.0);
-
+    eskf.x.offset_q = m_config.q_il;
+    eskf.x.offset_p = m_config.t_il;
     eskf.P = Mat30d::Identity() * 0.1;
     eskf.P.block<3, 3>(State::V_ID, State::V_ID) = Mat3d::Identity() * m_config.vel_cov;
     eskf.P.block<3, 3>(State::ACC_ID, State::ACC_ID) = Mat3d::Identity() * m_config.acc_cov;
@@ -110,7 +111,7 @@ void MapBuilder::lidarMeasure(State &x, ObservationState &obs)
     Vec3d normal = pabcd.head<3>();
     double d = normal.dot(m_current_point_in_world) + pabcd(3);
     Eigen::Matrix<double, 1, 6> drdx;
-    drdx.block<1, 3>(0, 0) = -normal.transpose() * eskf.x.q.matrix() * Sophus::SO3d::hat(m_current_point_in_body);
+    drdx.block<1, 3>(0, 0) = -normal.transpose() * eskf.x.q.matrix() * skew(m_current_point_in_body);
     drdx.block<1, 3>(0, 3) = normal;
     obs.H.block<6, 6>(0, 0) = drdx.transpose() * m_config.lidar_meas_cov_inv * drdx;
     obs.z.head<6>() = drdx.transpose() * m_config.lidar_meas_cov_inv * d;
@@ -273,10 +274,10 @@ void MapBuilder::trimMap()
 void MapBuilder::increMap()
 {
     if (m_cache_clouds->points.size() == 0)
-        return;    
-    
+        return;
+
     int size = m_cache_clouds->size();
-    
+
     PointVec point_to_add;
     PointVec point_no_need_downsample;
 

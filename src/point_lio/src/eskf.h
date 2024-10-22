@@ -1,6 +1,5 @@
 #pragma once
 #include "commons.h"
-#include "sophus/se3.hpp"
 
 struct State
 {

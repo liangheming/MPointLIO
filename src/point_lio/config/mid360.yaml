@@ -1,0 +1,27 @@
+imu_topic: /livox/imu
+lidar_topic: /livox/lidar
+imu_acc_multi: 10.0
+imu_gyro_multi: 1.0
+filter_num: 6
+lidar_scan_min_range: 0.25
+lidar_scan_max_range: 30.0
+map_frame: lidar
+body_frame: body
+
+imu_init_num: 100
+vel_cov: 20.0
+acc_cov: 500.0
+gyro_cov: 1000
+b_acc_cov: 0.0001
+b_gyro_cov: 0.0001
+lidar_meas_cov_inv: 100
+imu_meas_acc_cov_inv: 10
+imu_meas_gyro_cov_inv: 10
+satu_acc: 20.0
+satu_gyro: 35
+scan_resolution: 0.15
+map_resolution: 0.3
+near_search_numcube_len: 300.0
+move_thresh: 1.5
+det_range: 60.0
+pose_imu_lidar: [1.0, 0.0, 0.0, 0.0, -0.011, -0.02329, 0.04412] # [qw,qx,qy,qz,tx,ty,tz ]

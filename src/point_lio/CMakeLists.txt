@@ -26,7 +26,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
-find_package(Sophus REQUIRED )
 
 # add_compile_definitions(SOPHUS_USE_BASIC_LOGGING)
 
@@ -43,7 +42,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen3_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
-  ${Sophus_INCLUDE_DIRS}
 )
 set(SRC_LIST src/commons.cpp
              src/eskf.cpp
@@ -53,4 +51,4 @@ set(SRC_LIST src/commons.cpp
              src/point_lio_ros.cpp)
              
 add_executable(point_lio_node src/point_lio_node.cpp ${SRC_LIST})
-target_link_libraries(point_lio_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} fmt)
+target_link_libraries(point_lio_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
