@@ -60,6 +60,12 @@ roslaunch point_lio point_mid360.launch
 2. 对于一般的sdk如Livox-SDK2，往往累积一帧点云后才发布，所以实际运行时最高频率为min(imu_hz,lidar_hz);
 3. 该repo以点云的频率为主，然后在一帧点云之间插入imu数据的方式进行数据同步，所以最高频率是lidar的频率(mid360的sdk目前最高100hz)
 
+### 测试数据（100hz的mid360点云）
+```text
+链接: https://pan.baidu.com/s/1MgnHttpSgqGySmz8GUhmFg?pwd=1mgw 提取码: 1mgw 
+--来自百度网盘超级会员v7的分享
+```
+
 ### 参考及致谢
 1. [PointLIO论文](https://onlinelibrary.wiley.com/doi/epdf/10.1002/aisy.202200459)
 2. [PointLIO官方代码](https://github.com/hku-mars/Point-LIO)
