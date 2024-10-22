@@ -1,7 +1,7 @@
 imu_topic: /livox/imu
 lidar_topic: /livox/lidar
-imu_acc_multi: 10.0
-imu_gyro_multi: 1.0
+imu_acc_multi: 10.0 # 加速度测量值的放大倍数
+imu_gyro_multi: 1.0 # 角速度测量值的放大倍数
 filter_num: 6
 lidar_scan_min_range: 0.25
 lidar_scan_max_range: 30.0
